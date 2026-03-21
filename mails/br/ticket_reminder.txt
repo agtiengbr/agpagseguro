@@ -1,0 +1,14 @@
+ 
+
+{shop_url}
+
+Olá {firstname} {lastname},
+
+Não recebemos a confirmação do pagamento do seu pedido {order_reference}.
+
+Se você já realizou o pagamento, a aprovação pode levar até um dia útil para ser processada, então em breve o seu pedido será aprovado em nossa loja.
+Caso não tenha realizado o pagamento ainda, então [clique aqui]({ticket_link}) para imprimir o boleto bancário.
+
+[{shop_name}]({shop_url})
+
+Powered by [PrestaShop](https://www.prestashop.com/?utm_source=marchandprestashop&utm_medium=e-mail&utm_campaign=footer_1-7)

@@ -1,0 +1,83 @@
+services:
+  AGTI\PagSeguro\Application\Service\GenerateRemindersForTransaction:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\GenerateRemindersForTransaction
+    arguments:
+      - '@doctrine.orm.entity_manager'
+      - '%agti.pagseguro.ticket_warnings%'
+
+  AGTI\PagSeguro\Application\Service\SendReminderEmails:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\SendReminderEmails
+    arguments:
+      - '@doctrine.orm.entity_manager'
+
+  AGTI\PagSeguro\Application\Service\CreateTicketOrder:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\CreateTicketOrder
+    arguments:
+      - '@AGTI\PagSeguro\Infrastructure\Api\Remote\Order\CreateOrder'
+      - '@doctrine.orm.entity_manager'
+      - '@AGTI\PagSeguro\ValueObject\Configuration'
+
+
+  AGTI\PagSeguro\Application\Service\CreateCreditCardOrder:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\CreateCreditCardOrder
+    arguments:
+      - '@AGTI\PagSeguro\Infrastructure\Api\Remote\Order\CreateOrder'
+      - '@doctrine.orm.entity_manager'
+      - '@AGTI\PagSeguro\ValueObject\Configuration'      
+
+  AGTI\PagSeguro\Application\Service\CreatePixOrder:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\CreatePixOrder
+    arguments:
+      - '@AGTI\PagSeguro\Infrastructure\Api\Remote\Order\CreateOrder'
+      - '@AGTI\PagSeguro\Infrastructure\Api\Remote\Order\GetOrder'
+      - '@doctrine.orm.entity_manager'
+      - '@AGTI\PagSeguro\ValueObject\Configuration'      
+
+
+  AGTI\PagSeguro\Application\Service\GetCardKey:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\GetCardKey
+    arguments:
+    - '@doctrine.orm.entity_manager'
+    - '@AGTI\PagSeguro\Infrastructure\Api\Remote\PublicKey\GetCardKey'
+
+  AGTI\PagSeguro\Application\Service\UpdateChargeFromApi:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\UpdateChargeFromApi
+    arguments:
+    - '@AGTI\PagSeguro\Infrastructure\Api\Remote\Order\GetOrderByCharge'
+    - '@doctrine.orm.entity_manager'
+
+  AGTI\PagSeguro\Application\Service\GetOrderByCharge:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\GetOrderByCharge
+    arguments:
+    - '@AGTI\PagSeguro\Infrastructure\Api\Remote\Order\GetOrderByCharge'
+    - '@doctrine.orm.entity_manager'
+
+  AGTI\PagSeguro\Application\Service\CancelCharge:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\CancelCharge
+    arguments:
+    - '@AGTI\PagSeguro\Infrastructure\Api\Remote\Order\CancelChargeService'
+    - '@doctrine.orm.entity_manager'
+
+  AGTI\PagSeguro\Application\Service\UpdateMovementsPreviousDay:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\UpdateMovementsPreviousDay
+    arguments:
+      - '@AGTI\PagSeguro\Infrastructure\Api\Remote\Edi\Movimentos\EdiMovimentosService'
+      - '@doctrine.orm.entity_manager'
+      - '@AGTI\PagSeguro\ValueObject\Configuration'
+
+  AGTI\PagSeguro\Application\Service\SimulateFees:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\SimulateFees
+    arguments:
+      - '@doctrine.orm.entity_manager'
+      - '@AGTI\PagSeguro\Infrastructure\Api\Remote\Charge\Calculate\CalculateChargesService'

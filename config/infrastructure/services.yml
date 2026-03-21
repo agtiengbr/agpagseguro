@@ -1,0 +1,80 @@
+services:
+  AGTI\PagSeguro\ValueObject\Configuration:
+    public: true
+    class: AGTI\PagSeguro\ValueObject\Configuration
+    factory: ['AGTI\PagSeguro\Infrastructure\Configuration\ConfigurationAdapter', 'buildConfiguration']
+    
+  AGTI\PagSeguro\Infrastructure\Api\Local\TicketReminder\Get\GetTicketReminderService:
+    public: true
+    class: AGTI\PagSeguro\Infrastructure\Api\Local\TicketReminder\Get\GetTicketReminderService
+
+  AGTI\PagSeguro\Infrastructure\Api\Local\TicketReminder\Save\SaveTicketReminderService:
+    public: true
+    class: AGTI\PagSeguro\Infrastructure\Api\Local\TicketReminder\Save\SaveTicketReminderService
+
+  agti.pagseguro.infrastructure.serializer.serializer:
+    public: true
+    class: Symfony\Component\Serializer\Serializer 
+    factory: ['AGTI\PagSeguro\Infrastructure\Serializer\Serializer', 'buildSerializer']
+
+
+  agti.pagseguro.infrastructure.symfony.curl_http_client:
+    public: true
+    class: Symfony\Component\HttpClient\CurlHttpClient
+
+
+  AGTI\PagSeguro\Infrastructure\Api\Remote\BaseService:
+    public: true
+    abstract: true
+    arguments:
+      - '@agti.pagseguro.infrastructure.symfony.curl_http_client'
+      - '@agti.pagseguro.infrastructure.serializer.serializer'
+      - '@AGTI\PagSeguro\ValueObject\Configuration'
+      
+      
+
+
+  AGTI\PagSeguro\Infrastructure\Api\Remote\Order\GetOrder:
+    public: true
+    class: AGTI\PagSeguro\Infrastructure\Api\Remote\Order\GetOrder
+    parent: AGTI\PagSeguro\Infrastructure\Api\Remote\BaseService
+
+  AGTI\PagSeguro\Infrastructure\Api\Remote\Order\GetOrderByCharge:
+    public: true
+    class: AGTI\PagSeguro\Infrastructure\Api\Remote\Order\GetOrderByCharge
+    parent: AGTI\PagSeguro\Infrastructure\Api\Remote\BaseService    
+
+  AGTI\PagSeguro\Infrastructure\Api\Remote\Order\CreateOrder:
+    public: true
+    class: AGTI\PagSeguro\Infrastructure\Api\Remote\Order\CreateOrder
+    parent: AGTI\PagSeguro\Infrastructure\Api\Remote\BaseService
+
+  AGTI\PagSeguro\Infrastructure\Api\Remote\Order\CancelChargeService:
+    public: true
+    class: AGTI\PagSeguro\Infrastructure\Api\Remote\Order\CancelChargeService
+    parent: AGTI\PagSeguro\Infrastructure\Api\Remote\BaseService
+
+  AGTI\PagSeguro\Infrastructure\Api\Remote\Charge\Calculate\CalculateChargesService:
+    public: true
+    class: AGTI\PagSeguro\Infrastructure\Api\Remote\Charge\Calculate\CalculateChargesService
+    parent: AGTI\PagSeguro\Infrastructure\Api\Remote\BaseService
+
+
+  AGTI\PagSeguro\Infrastructure\Api\Remote\PublicKey\GetCardKey:
+    public: true
+    class: AGTI\PagSeguro\Infrastructure\Api\Remote\PublicKey\GetCardKey
+    parent: AGTI\PagSeguro\Infrastructure\Api\Remote\BaseService
+
+  AGTI\PagSeguro\Infrastructure\Api\Remote\PublicKey\CreateCardKey:
+    public: true
+    class: AGTI\PagSeguro\Infrastructure\Api\Remote\PublicKey\CreateCardKey
+    parent: AGTI\PagSeguro\Infrastructure\Api\Remote\BaseService
+
+  AGTI\PagSeguro\Infrastructure\Api\Remote\Edi\Movimentos\EdiMovimentosService:
+    public: true
+    class: AGTI\PagSeguro\Infrastructure\Api\Remote\Edi\Movimentos\EdiMovimentosService
+    arguments:
+      - '@agti.pagseguro.infrastructure.symfony.curl_http_client'
+      - '@agti.pagseguro.infrastructure.serializer.serializer'
+      - '@AGTI\PagSeguro\ValueObject\Configuration'
+           

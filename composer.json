@@ -1,0 +1,13 @@
+{
+  "name": "agti/agpagseguro",
+  "autoload": {
+    "psr-4": {
+      "AGTI\\PagSeguro\\": "src/"
+    }
+  },
+  "type": "prestashop-module",
+  "config": {
+    "preferred-install": "dist",
+    "prepend-autoloader": false
+  }
+}

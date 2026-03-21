@@ -1,0 +1,8 @@
+imports:
+  - { resource: local.yml}
+  - { resource: infrastructure/services.yml}
+  - { resource: application/services.yml}
+
+
+parameters:
+  agti.pagseguro.sandbox: true

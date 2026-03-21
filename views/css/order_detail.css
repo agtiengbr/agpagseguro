@@ -1,0 +1,10 @@
+.agpagseguro_print_ticket {
+	margin-bottom: 13px;
+}
+
+.agpagseguro_print_ticket i.icon-barcode {
+	font-size: 18px;
+    position: relative;
+    top: 2px;
+    padding-right: 10px;
+}

@@ -1,0 +1,20 @@
+#agpagseguro_credit_card_form label{
+	display: table-cell;
+}
+
+#agpagseguro_credit_card_form input{
+	float: left;
+    width: 100%;
+}
+
+#agpagseguro_credit_card_form select{
+	background-image: none;
+}
+
+#agpagseguro_credit_card_form .physical_person {
+	margin-right: 10px;
+}
+
+#agpagseguro_credit_card_form .person_type .active{
+	background: #aaa;
+}

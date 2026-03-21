@@ -1,0 +1,41 @@
+#pix-qrcode {
+    border: none;
+    margin: auto;
+    text-align: center;
+    display: block;
+    margin-top: 2rem;
+    margin-bottom: 10px;
+    max-width: 200px;
+}
+
+#pix-message-code {
+    text-align: center;
+    margin-block: 1.5rem;
+    border: 1px gray solid;
+    padding: 1rem;
+    max-width: 500px;
+    margin-inline: auto;
+}
+
+#pix-message {
+    display: block;
+    text-align: center;
+    margin: 1.5rem 0 1.5rem 0;
+}
+
+.barcode {
+    word-break: break-word;
+}
+
+.copyBarcode-center {
+    gap: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+}
+
+#content-hook_order_confirmation:has(.payment-error-message) .done {
+    display: none;
+}

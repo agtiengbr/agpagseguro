@@ -1,0 +1,4 @@
+parameters:
+  agti.pagseguro.ticket_warnings:
+    - 2
+    

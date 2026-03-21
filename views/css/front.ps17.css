@@ -1,0 +1,50 @@
+.hidden {
+	display: none;
+}
+
+#agpagseguro_credit_card_form label{
+	text-align: left;
+	margin-bottom: 0;
+}
+
+#agpagseguro_credit_card_form .box .row:not(.person-type) {
+	margin-bottom: 10px;
+}
+
+#agpagseguro_credit_card_form .person_type{
+	text-align: center;
+	margin-bottom: 20px;
+	margin-top: 20px;
+}
+
+#agpagseguro_credit_card_form .person_type button{
+	float: none;
+}
+
+#agpagseguro_cardbanner {
+	position: absolute;
+	top: 23px;
+	right: 15px;
+}
+
+
+#agpagseguro_credit_card_form select.is-not-selected {
+	color: #777;
+}
+
+#agpagseguro_credit_card_form .has-error {
+	color: red;
+}
+
+#agpagseguro_credit_card_form .has-error input,
+#agpagseguro_credit_card_form .has-error select{
+	border: 2px solid red;
+}
+
+#agpagseguro_eft_form label, #agpagseguro_eft_form input {
+	display: inline !important;
+}
+
+.agpagseguro-banner {
+	margin-bottom: 20px;
+}

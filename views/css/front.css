@@ -1,0 +1,23 @@
+.payment_module.agpagseguro {
+	background: #fbfbfb;
+}
+
+.payment_module.agpagseguro img{
+	float: left;
+    position: relative;
+    right: 82px;
+    bottom: 9px;
+}
+
+.payment_module.agpagseguro.credit_card img{
+	bottom: 15px;
+}
+
+.payment_module.agpagseguro span{
+	position: relative;
+	right: 64px;
+}
+
+.agpagseguro-banner {
+	margin-bottom: 20px;
+}

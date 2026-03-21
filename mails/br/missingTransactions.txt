@@ -1,0 +1,13 @@
+{shop_url}
+
+Foi identificado uma transação do Pag Seguro que não foi salva corretamente
+
+ID da transação: {idRequest}
+
+Atenciosamente,
+VERT
+www.vert-shoes.com.br
+
+Ficou com alguma dúvida?
+
+sac@vert-shoes.com.br
