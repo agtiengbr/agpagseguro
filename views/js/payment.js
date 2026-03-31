@@ -142,6 +142,25 @@ document.addEventListener('DOMContentLoaded', function(){
 
 	function formSubmited(e)
 	{
+		function normalizeExpirationYear(yearValue)
+		{
+			const rawYear = (yearValue || '').toString().replace(/\D/g, '');
+
+			if (rawYear.length === 2) {
+				const currentYear = new Date().getFullYear();
+				const currentCentury = Math.floor(currentYear / 100) * 100;
+				return (currentCentury + parseInt(rawYear, 10)).toString();
+			}
+
+			if (rawYear.length === 4) {
+				return rawYear;
+			}
+
+			return rawYear;
+		}
+
+		const normalizedExpYear = normalizeExpirationYear(input_expir_year.val());
+
 		
 		let pscard = 
 			{
@@ -149,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function(){
 				holder: input_card_holder.val(),
 				number: input_card_number.val().replaceAll(' ', ''),
 				expMonth: input_expir_month.val(),
-				expYear: input_expir_year.val(),
+				expYear: normalizedExpYear,
 				securityCode: input_cvv.val()
 			};
 
