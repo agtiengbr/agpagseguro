@@ -4,6 +4,7 @@ use AGTI\PagSeguro\Application\Service\GenerateRemindersForTransaction;
 use AGTI\PagSeguro\Application\Service\GetCardKey;
 use AGTI\PagSeguro\Infrastructure\Api\Remote\PublicKey\CreateCardKey;
 use AGTI\PagSeguro\Application\Service\UpdateChargeFromApi;
+use AGTI\PagSeguro\Application\Service\UpdateTransactionFromOrderId;
 use AGTI\PagSeguro\Entity\AgpagseguroTicketReminder;
 use AGTI\PagSeguro\Entity\AgpagseguroTransaction as EttAgPagseguroTransaction;
 use AGTI\PagSeguro\Entity\Orders;
@@ -96,7 +97,7 @@ class BaseAgPagSeguro extends AgPaymentModule
 	{
 		$this->name     = 'agpagseguro';
         $this->tab      = 'payments_gateways';
-        $this->version  = '2.1.11';
+    $this->version  = '2.1.12';
         $this->author   = 'AGTI';
         // $this->controllers = array('payment', 'validation');
 
@@ -116,6 +117,8 @@ class BaseAgPagSeguro extends AgPaymentModule
         Configuration::updateValue('AGPAGSEGURO_CREDIT_CARD_REQUIRE_VALID_ORDER', 0);
         Configuration::updateValue('AGPAGSEGURO_EFT_TEXT_CHECKOUT','Pague via Débito em Conta');
 		Configuration::updateValue('AGPAGSEGURO_WEBHOOK_PROCESS_IMMEDIATE', 0);
+        Configuration::updateValue('AGPAGSEGURO_SHOW_MISSING_TRANSACTION_WARNING', 1);
+        Configuration::updateValue('AGPAGSEGURO_IGNORED_MISSING_TRANSACTION_ORDERS', json_encode([]));
         Configuration::updateValue('AGPAGSEGURO_WEBHOOK_NOTIFICATION_URL', $this->context->link->getModuleLink($this->name, 'webhook'));
         
         return parent::install();
@@ -130,6 +133,31 @@ class BaseAgPagSeguro extends AgPaymentModule
         }
 
         return $this->context->link->getModuleLink($this->name, 'webhook');
+    }
+
+    protected function getIgnoredMissingTransactionOrderIds()
+    {
+        $orderIds = json_decode((string) Configuration::get('AGPAGSEGURO_IGNORED_MISSING_TRANSACTION_ORDERS'), true);
+        if (!is_array($orderIds)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(array_map('intval', $orderIds))));
+    }
+
+    protected function ignoreMissingTransactionOrder($orderId)
+    {
+        $orderId = (int) $orderId;
+        if ($orderId <= 0) {
+            return;
+        }
+
+        $ignoredOrderIds = $this->getIgnoredMissingTransactionOrderIds();
+        if (!in_array($orderId, $ignoredOrderIds, true)) {
+            $ignoredOrderIds[] = $orderId;
+        }
+
+        Configuration::updateValue('AGPAGSEGURO_IGNORED_MISSING_TRANSACTION_ORDERS', json_encode(array_values($ignoredOrderIds)));
     }
 
 	public function getContent()
@@ -221,12 +249,26 @@ class BaseAgPagSeguro extends AgPaymentModule
         ]);
 
         if ($this->context->controller->controller_name == 'AdminOrders' && !$this->context->controller->ajax) {
+            if (Tools::getValue('agpagseguro_ignore_missing_transaction')) {
+                $this->ignoreMissingTransactionOrder(Tools::getValue('agpagseguro_ignore_missing_transaction'));
+
+                $redirectParams = [];
+                if (Tools::getValue('id_order')) {
+                    $redirectParams['id_order'] = (int) Tools::getValue('id_order');
+                }
+                if (Tools::getValue('vieworder') !== false) {
+                    $redirectParams['vieworder'] = true;
+                }
+
+                Tools::redirectAdmin($this->context->link->getAdminLink('AdminOrders', true, [], $redirectParams));
+            }
+
             if (Tools::isSubmit('agpagseguro-transaction-save')) {
-                $service = $this->get(UpdateChargeFromApi::class);
+                $service = $this->get(UpdateTransactionFromOrderId::class);
 
                 try {
                     /** @var EttAgPagseguroTransaction */
-                    $transaction = $service->exec(Tools::getValue('agpagseguro_transaction_code'));
+                    $transaction = $service->exec(Tools::getValue('agpagseguro_pagseguro_order_id'));
 
                     /** @var EntityManagerInterface */
                     $em = $this->get('doctrine.orm.entity_manager');
@@ -238,8 +280,15 @@ class BaseAgPagSeguro extends AgPaymentModule
                     $this->context->controller->errors[] = $e->getMessage();
                 }
             }
-            
-            $orders = AgPagseguroTransaction::findOrdersWithoutTransaction();
+
+            if (!Configuration::get('AGPAGSEGURO_SHOW_MISSING_TRANSACTION_WARNING')) {
+                return;
+            }
+
+            $ignoredOrderIds = $this->getIgnoredMissingTransactionOrderIds();
+            $orders = array_values(array_filter(AgPagseguroTransaction::findOrdersWithoutTransaction(), function ($order) use ($ignoredOrderIds) {
+                return !in_array((int) $order->id, $ignoredOrderIds, true);
+            }));
             $error_msg = "";
             if (count($orders)) {
                 $error_msg .= "Os seguintes pedidos do PrestaShop estão com erros de integração com o PagSeguro. Clique sobre o ID dos pedidos para corrigir. <ul>";
@@ -251,7 +300,17 @@ class BaseAgPagSeguro extends AgPaymentModule
                         $link = $this->context->link->getAdminLink('AdminOrders', true) . "&id_order={$order->id}&vieworder";
                     }
 
-                    $error_msg .= "<li><a href='{$link}'>{$order->reference}</li>";
+                    $ignoreLinkParams = ['agpagseguro_ignore_missing_transaction' => $order->id];
+                    if (Tools::getValue('id_order')) {
+                        $ignoreLinkParams['id_order'] = (int) Tools::getValue('id_order');
+                    }
+                    if (Tools::getValue('vieworder') !== false) {
+                        $ignoreLinkParams['vieworder'] = true;
+                    }
+
+                    $ignoreLink = $this->context->link->getAdminLink('AdminOrders', true, [], $ignoreLinkParams);
+
+                    $error_msg .= "<li><a href='{$link}'>{$order->reference}</a> <a href='{$ignoreLink}'>ignorar</a></li>";
                 }
 
                 $this->context->controller->errors[] = $error_msg;
@@ -956,6 +1015,7 @@ class BaseAgPagSeguro extends AgPaymentModule
             Configuration::updateValue('AGPAGSEGURO_CONFIGURATION_TIMEOUT_CLEAR_REQUESTS', Tools::getValue('agpagseguro_timeout_clear_requests'));
             Configuration::updateValue('AGPATSEGURO_EMAIL_SUBJECT_CANCEL_TRANSACTION', Tools::getValue('agpagseguro_email_subject_cancel_transaction'));
             Configuration::updateValue('AGPAGSEGURO_EMAILS_ALERT_MISSING_TRANSACTIONS', Tools::getValue('agpagseguro_emails_alert_missing_transactions'));
+            Configuration::updateValue('AGPAGSEGURO_SHOW_MISSING_TRANSACTION_WARNING', Tools::getValue('agpagseguro_show_missing_transaction_warning'));
             Configuration::updateValue('AGPAGSEGURO_WEBHOOK_PROCESS_IMMEDIATE', Tools::getValue('agpagseguro_webhook_process_immediate'));
             Configuration::updateValue('AGPAGSEGURO_WEBHOOK_NOTIFICATION_URL', trim((string) Tools::getValue('agpagseguro_webhook_notification_url')));
 
@@ -1029,6 +1089,25 @@ class BaseAgPagSeguro extends AgPaymentModule
                 ],
                 [
                     'type'   => 'switch',
+                    'label'  => 'Exibir aviso de pedidos sem integração',
+                    'name'   => 'agpagseguro_show_missing_transaction_warning',
+                    'id'     => 'agpagseguro_show_missing_transaction_warning',
+                    'desc'   => 'Quando desativado, o alerta com a lista de pedidos sem transação vinculada deixa de aparecer no administrativo.',
+                    'values' => array(
+                        array(
+                            'id'    => 'agpagseguro_show_missing_transaction_warning_on',
+                            'value' => 1,
+                            'label' => 'Sim',
+                        ),
+                        array(
+                            'id'    => 'agpagseguro_show_missing_transaction_warning_off',
+                            'value' => 0,
+                            'label' => 'Não',
+                        ),
+                    ),
+                ],
+                [
+                    'type'   => 'switch',
                     'label'  => 'Processar webhooks imediatamente',
                     'name'   => 'agpagseguro_webhook_process_immediate',
                     'id'     => 'agpagseguro_webhook_process_immediate',
@@ -1089,6 +1168,7 @@ class BaseAgPagSeguro extends AgPaymentModule
         $helper->fields_value['agpagseguro_timeout_clear_requests'] = Configuration::get('AGPAGSEGURO_CONFIGURATION_TIMEOUT_CLEAR_REQUESTS');
         $helper->fields_value['agpagseguro_email_subject_cancel_transaction'] = Configuration::get('AGPAGSEGURO_EMAIL_SUBJECT_CANCEL_TRANSACTION');
         $helper->fields_value['agpagseguro_emails_alert_missing_transactions'] = Configuration::get('AGPAGSEGURO_EMAILS_ALERT_MISSING_TRANSACTIONS');
+        $helper->fields_value['agpagseguro_show_missing_transaction_warning'] = (int) Configuration::get('AGPAGSEGURO_SHOW_MISSING_TRANSACTION_WARNING');
         $helper->fields_value['agpagseguro_webhook_process_immediate'] = Configuration::get('AGPAGSEGURO_WEBHOOK_PROCESS_IMMEDIATE');
         $helper->fields_value['agpagseguro_webhook_notification_url'] = $this->getWebhookNotificationUrl();
         $helper->fields_value['agpagseguro_edi_user'] = Configuration::get('AGPAGSEGURO_EDI_USER');

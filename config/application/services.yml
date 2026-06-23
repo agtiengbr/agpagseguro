@@ -53,6 +53,13 @@ services:
     - '@AGTI\PagSeguro\Infrastructure\Api\Remote\Order\GetOrderByCharge'
     - '@doctrine.orm.entity_manager'
 
+  AGTI\PagSeguro\Application\Service\UpdateTransactionFromOrderId:
+    public: true
+    class: AGTI\PagSeguro\Application\Service\UpdateTransactionFromOrderId
+    arguments:
+    - '@AGTI\PagSeguro\Infrastructure\Api\Remote\Order\GetOrder'
+    - '@doctrine.orm.entity_manager'
+
   AGTI\PagSeguro\Application\Service\GetOrderByCharge:
     public: true
     class: AGTI\PagSeguro\Application\Service\GetOrderByCharge

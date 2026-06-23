@@ -36,15 +36,16 @@
         </dl> *}
     {/if}
     {if !isset($transaction)}
-        <div class="alert alert-danger">Esse pedido não possui um código de transação com o PagSeguro. Por favor, informe os dados abaixo.</div>
+        <div class="alert alert-danger">Esse pedido não possui uma transação vinculada ao PagBank. Por favor, informe o ORDER_ID gerado pelo PagBank abaixo.</div>
 
         <form method="POST">
             <div class="row form-horizontal">
                 <input type="hidden" name="agpagseguro_id_order" value="{$id_order}"/>
                 <div class="form-group">
-                    <label class="control-label col-lg-3">Código da Transação</label>
+                    <label class="control-label col-lg-3">ORDER_ID PagBank</label>
                     <div class="col-lg-9">
-                        <input type="text" name="agpagseguro_transaction_code" />
+                        <input type="text" name="agpagseguro_pagseguro_order_id" placeholder="ORDE_..." />
+                        <p class="help-block">Os demais dados (forma de pagamento, valor, parcelas, status, etc.) serão preenchidos automaticamente via API.</p>
                     </div>
                 </div>
 

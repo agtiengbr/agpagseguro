@@ -46,15 +46,16 @@
             <dd>{Tools::displayPrice($pagseguro_transaction->getNetAmount())}</dd> *}
         </dl>
     {else}
-        <div class="alert alert-danger">Esse pedido não possui um código de transação com o PagSeguro. Por favor, informe os dados abaixo.</div>
+        <div class="alert alert-danger">Esse pedido não possui uma transação vinculada ao PagBank. Por favor, informe o ORDER_ID gerado pelo PagBank abaixo (ex.: <code>ORDE_XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX</code>).</div>
 
         <form method="POST">
             <div class="form-horizontal">
                 <input type="hidden" name="agpagseguro_id_order" value="{$id_order}"/>
                 <div class="form-group">
-                    <label class="control-label">Código da Transação</label>
+                    <label class="control-label">ORDER_ID PagBank</label>
                     <div class="">
-                        <input type="text" name="agpagseguro_transaction_code"  class="form-control"/>
+                        <input type="text" name="agpagseguro_pagseguro_order_id" class="form-control" placeholder="ORDE_..."/>
+                        <small class="form-text text-muted">Os demais dados (forma de pagamento, valor, parcelas, status, etc.) serão preenchidos automaticamente via API.</small>
                     </div>
                 </div>
 
