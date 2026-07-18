@@ -97,7 +97,7 @@ class BaseAgPagSeguro extends AgPaymentModule
 	{
 		$this->name     = 'agpagseguro';
         $this->tab      = 'payments_gateways';
-    $this->version  = '2.1.12';
+        $this->version  = '2.2.0';
         $this->author   = 'AGTI';
         // $this->controllers = array('payment', 'validation');
 
@@ -118,10 +118,9 @@ class BaseAgPagSeguro extends AgPaymentModule
         Configuration::updateValue('AGPAGSEGURO_EFT_TEXT_CHECKOUT','Pague via Débito em Conta');
 		Configuration::updateValue('AGPAGSEGURO_WEBHOOK_PROCESS_IMMEDIATE', 0);
         Configuration::updateValue('AGPAGSEGURO_SHOW_MISSING_TRANSACTION_WARNING', 1);
-        Configuration::updateValue('AGPAGSEGURO_IGNORED_MISSING_TRANSACTION_ORDERS', json_encode([]));
         Configuration::updateValue('AGPAGSEGURO_WEBHOOK_NOTIFICATION_URL', $this->context->link->getModuleLink($this->name, 'webhook'));
-        
-        return parent::install();
+
+        return parent::install() && $this->createMissingTransactionIgnoreStorage();
     }
 
     public function getWebhookNotificationUrl()
@@ -135,14 +134,39 @@ class BaseAgPagSeguro extends AgPaymentModule
         return $this->context->link->getModuleLink($this->name, 'webhook');
     }
 
+    protected function createMissingTransactionIgnoreStorage()
+    {
+        if (!class_exists('AgPagseguroMissingTransactionIgnore', false)) {
+            require_once _PS_MODULE_DIR_ . $this->name . '/classes/AgPagseguroMissingTransactionIgnore.php';
+        }
+
+        $model = new AgPagseguroMissingTransactionIgnore();
+
+        if (method_exists($model, 'createDatabase') && !$model->createDatabase()) {
+            return false;
+        }
+
+        if (method_exists($model, 'createMissingColumns') && !$model->createMissingColumns()) {
+            return false;
+        }
+
+        if (method_exists($model, 'createIndexes') && !$model->createIndexes()) {
+            return false;
+        }
+
+        return true;
+    }
+
     protected function getIgnoredMissingTransactionOrderIds()
     {
-        $orderIds = json_decode((string) Configuration::get('AGPAGSEGURO_IGNORED_MISSING_TRANSACTION_ORDERS'), true);
-        if (!is_array($orderIds)) {
+        $ignored = AgPagseguroMissingTransactionIgnore::getAll();
+        if (!is_array($ignored)) {
             return [];
         }
 
-        return array_values(array_unique(array_filter(array_map('intval', $orderIds))));
+        return array_values(array_unique(array_map(function ($item) {
+            return (int) $item->id_order;
+        }, $ignored)));
     }
 
     protected function ignoreMissingTransactionOrder($orderId)
@@ -152,12 +176,14 @@ class BaseAgPagSeguro extends AgPaymentModule
             return;
         }
 
-        $ignoredOrderIds = $this->getIgnoredMissingTransactionOrderIds();
-        if (!in_array($orderId, $ignoredOrderIds, true)) {
-            $ignoredOrderIds[] = $orderId;
+        if (AgPagseguroMissingTransactionIgnore::getByOrderId($orderId)) {
+            return;
         }
 
-        Configuration::updateValue('AGPAGSEGURO_IGNORED_MISSING_TRANSACTION_ORDERS', json_encode(array_values($ignoredOrderIds)));
+        $ignore = new AgPagseguroMissingTransactionIgnore();
+        $ignore->id_order = $orderId;
+        $ignore->date_add = date('Y-m-d H:i:s');
+        $ignore->add();
     }
 
 	public function getContent()

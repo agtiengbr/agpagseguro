@@ -152,7 +152,7 @@ class AgPagSeguroValidationModuleFrontController extends ModuleFrontController
         }
 
         
-        $ps_order = new Order(Order::getOrderByCartId($this->context->cart->id));
+        $ps_order = Order::getByCartId($this->context->cart->id);
 
         if ($r instanceof EttAgPagseguroTransaction) {
             $ettOrder = $this->get('doctrine.orm.entity_manager')->getRepository(Orders::class)->findOneBy(['id' => $ps_order->id]);
@@ -201,7 +201,7 @@ class AgPagSeguroValidationModuleFrontController extends ModuleFrontController
 
         //     $this->module->validateOrder($cart->id, Configuration::get('AGPAGSEGURO_STATUS_' . $status), $cart->getOrderTotal(), $payment_way, NULL, null, (int)$this->context->currency->id, false, $this->context->customer->secure_key);
 
-        //     $ps_order = new Order(Order::getOrderByCartId($cart->id));
+        //     $ps_order = Order::getByCartId($cart->id);
 
 
         //     //salva a transação no bd
