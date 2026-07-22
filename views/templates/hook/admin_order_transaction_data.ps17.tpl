@@ -31,19 +31,23 @@
             {/if}
 
             {if isset($charges) && count($charges)}
+                {assign var='transaction_amount' value=$charges[0]->getAmount()->getValue() / 100}
                 <dt>Valor da Transação</dt>
-                <dd>{Tools::displayPrice($charges[0]->getAmount()->getValue() / 100)}</dd>
-            {else if is_array($qrcodes) && count($qrcodes)}
+                <dd>{displayPrice price=$transaction_amount}</dd>
+            {else}
                 {assign var='qrcodes' value=$apiOrder->getQrCodes()}
-                <dt>Valor da Transação</dt>
-                <dd>{Tools::displayPrice($qrcodes[0]->getAmount()->getValue() / 100)}</dd>
+                {if is_array($qrcodes) && count($qrcodes)}
+                    {assign var='transaction_amount' value=$qrcodes[0]->getAmount()->getValue() / 100}
+                    <dt>Valor da Transação</dt>
+                    <dd>{displayPrice price=$transaction_amount}</dd>
+                {/if}
             {/if}
 
             {* <dt>Taxa de Intermediação</dt>
-            <dd>{Tools::displayPrice($pagseguro_tax)}</dd>
+            <dd>{displayPrice price=$pagseguro_tax}</dd>
 
             <dt>Valor Líquido</dt>
-            <dd>{Tools::displayPrice($pagseguro_transaction->getNetAmount())}</dd> *}
+            <dd>{displayPrice price=$pagseguro_transaction->getNetAmount()}</dd> *}
         </dl>
     {else}
         <div class="alert alert-danger">Esse pedido não possui uma transação vinculada ao PagBank. Por favor, informe o ORDER_ID gerado pelo PagBank abaixo (ex.: <code>ORDE_XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX</code>).</div>

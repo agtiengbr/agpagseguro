@@ -26,13 +26,13 @@
             {/if}
 
             <dt>Valor da Transação</dt>
-            <dd>{Tools::displayPrice($pagseguro_transaction->getGrossAmount())}</dd>
+            <dd>{displayPrice price=$pagseguro_transaction->getGrossAmount()}</dd>
 
             <dt>Taxa de Intermediação</dt>
-            <dd>{Tools::displayPrice($pagseguro_tax)}</dd>
+            <dd>{displayPrice price=$pagseguro_tax}</dd>
 
             <dt>Valor Líquido</dt>
-            <dd>{Tools::displayPrice($pagseguro_transaction->getNetAmount())}</dd>
+            <dd>{displayPrice price=$pagseguro_transaction->getNetAmount()}</dd>
         </dl> *}
     {/if}
     {if !isset($transaction)}

@@ -97,7 +97,7 @@ class BaseAgPagSeguro extends AgPaymentModule
 	{
 		$this->name     = 'agpagseguro';
         $this->tab      = 'payments_gateways';
-        $this->version  = '2.2.0';
+        $this->version  = '2.2.1';
         $this->author   = 'AGTI';
         // $this->controllers = array('payment', 'validation');
 
