@@ -2,7 +2,7 @@
 <module>
     <name>agpagseguro</name>
     <displayName><![CDATA[PagSeguro Transparente]]></displayName>
-    <version><![CDATA[2.2.2]]></version>
+    <version><![CDATA[2.2.3]]></version>
     <description><![CDATA[Integra a sua loja PrestaShop com o PagSeguro.]]></description>
     <author><![CDATA[AGTI]]></author>
     <tab><![CDATA[payments_gateways]]></tab>

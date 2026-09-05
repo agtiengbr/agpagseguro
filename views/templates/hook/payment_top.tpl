@@ -4,7 +4,12 @@
 		
 		<ul>
 			{foreach from=$errors item=error}
-				<li>{$error}</li>
+				<li>
+					{$error}
+					{if $error == 'Data de nascimento do comprador não informada.'}
+						<a href="{$link->getPageLink('identity', true)|escape:'html'}">Clique aqui para informar sua data de nascimento.</a>
+					{/if}
+				</li>
 			{/foreach}
 		</ul>
 	</div>
