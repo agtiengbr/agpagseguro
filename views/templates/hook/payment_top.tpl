@@ -1,15 +1,10 @@
 {if $errors|count}
 	<div class='alert alert-danger'>
-		<p>Para visualizar mais formas de pagamento por favor corrija os erros abaixo.</p>
+		<p>Para visualizar mais formas de pagamento por favor corrija os erros abaixo. Para corrigir seu cadastro, <a href="{$link->getPageLink('identity', true)|escape:'html'}">clique aqui</a></p>
 		
 		<ul>
 			{foreach from=$errors item=error}
-				<li>
-					{$error}
-					{if $error == 'Data de nascimento do comprador não informada.'}
-						<a href="{$link->getPageLink('identity', true)|escape:'html'}">Clique aqui para informar sua data de nascimento.</a>
-					{/if}
-				</li>
+				<li>{$error}</li>
 			{/foreach}
 		</ul>
 	</div>
