@@ -10,6 +10,7 @@ class AgPagSeguroTransactionStatuses extends AgPagSeguroEnum
         'DECLINED' => 'Pagamento Recusado',
         'IN_ANALYSIS' => 'Sob Análise',
         'CANCELED' => 'Transação Cancelada',
+        'NOT_FOUND' => 'Transação não encontrada',
         'PAGSEGURO_ERROR' => 'Erro Retornado pelo PagSeguro',
         "CANCELED_AFTER_PAYMENT" => "Cancelado após pagamento"
     ];

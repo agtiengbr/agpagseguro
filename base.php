@@ -97,7 +97,7 @@ class BaseAgPagSeguro extends AgPaymentModule
 	{
 		$this->name     = 'agpagseguro';
         $this->tab      = 'payments_gateways';
-        $this->version  = '2.2.4';
+        $this->version  = '2.2.5';
         $this->author   = 'AGTI';
         // $this->controllers = array('payment', 'validation');
 
@@ -118,6 +118,8 @@ class BaseAgPagSeguro extends AgPaymentModule
         Configuration::updateValue('AGPAGSEGURO_EFT_TEXT_CHECKOUT','Pague via Débito em Conta');
 		Configuration::updateValue('AGPAGSEGURO_WEBHOOK_PROCESS_IMMEDIATE', 0);
         Configuration::updateValue('AGPAGSEGURO_SHOW_MISSING_TRANSACTION_WARNING', 1);
+        Configuration::updateValue('AGPAGSEGURO_STATUS_NOT_FOUND', -1);
+        Configuration::updateValue('AGPAGSEGURO_STATUS_NOT_FOUND_FINISH_ORDER', 0);
         Configuration::updateValue('AGPAGSEGURO_WEBHOOK_NOTIFICATION_URL', $this->context->link->getModuleLink($this->name, 'webhook'));
 
         return parent::install() && $this->createMissingTransactionIgnoreStorage();

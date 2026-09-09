@@ -127,8 +127,8 @@ class agpagseguroupdatetransactionstatusModuleFrontController extends ModuleFron
                     } catch (\Throwable $e) {}
 
                     if ($httpCode === 404) {
-                        AgClienteLogger::addLog("Order {$transaction->pagseguro_order_id} não encontrado na API (404). Marcando como CANCELED para não reprocessar.", 2);
-                        $remoteStatus = 'CANCELED';
+                        AgClienteLogger::addLog("Order {$transaction->pagseguro_order_id} não encontrado na API (404). Registrando como NOT_FOUND conforme o mapeamento configurado.", 2);
+                        $remoteStatus = 'NOT_FOUND';
                         $remoteOrderId = $transaction->pagseguro_order_id;
                     } elseif ($httpCode >= 400) {
                         AgClienteLogger::addLog("Erro ao buscar order {$transaction->pagseguro_order_id} na API (HTTP {$httpCode}); ignorando.", 2);
