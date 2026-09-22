@@ -1,8 +1,11 @@
 <?php
 
 use AGTI\PagSeguro\Entity\AgpagseguroTransaction;
+use AGTI\PagSeguro\Infrastructure\Api\Remote\Classic\GetTransactionByNotificationCode;
 use AGTI\PagSeguro\Infrastructure\Api\Remote\Order\Entity\Order;
 use AGTI\PagSeguro\Infrastructure\Api\Remote\Order\GetOrder;
+use AGTI\PagSeguro\Infrastructure\Webhook\ClassicNotificationPayloadParser;
+use AGTI\PagSeguro\Infrastructure\Webhook\ClassicTransactionStatusMapper;
 
 if (!class_exists('AgPagSeguroLock', false)) {
     require_once _PS_MODULE_DIR_ . 'agpagseguro/lib/AgPagSeguroLock.php';
@@ -56,25 +59,65 @@ class AgPagSeguroWebhookModuleFrontController extends ModuleFrontController
             exit();
         }
 
-        $data = file_get_contents("php://input");
-        $serializer = $this->get('agti.pagseguro.infrastructure.serializer.serializer');
-        $order = $serializer->deserialize($data, Order::class, 'json');
+        $data = file_get_contents('php://input');
+        $contentType = isset($_SERVER['CONTENT_TYPE'])
+            ? strtolower(trim(explode(';', (string) $_SERVER['CONTENT_TYPE'], 2)[0]))
+            : '';
+        $parser = new ClassicNotificationPayloadParser();
+
+        if ($contentType === 'application/x-www-form-urlencoded') {
+            try {
+                $notificationCode = $parser->parse($data);
+            } catch (\InvalidArgumentException $e) {
+                $this->respond(400, 'Invalid classic notification payload.');
+            }
+        } else {
+            $serializer = $this->get('agti.pagseguro.infrastructure.serializer.serializer');
+            try {
+                $order = $serializer->deserialize($data, Order::class, 'json');
+                $notificationCode = $order instanceof Order ? $order->getId() : null;
+            } catch (\Throwable $e) {
+                $this->respond(400, 'Invalid Order webhook payload.');
+            }
+
+            if (!ClassicNotificationPayloadParser::isOrderId($notificationCode)) {
+                $this->respond(400, 'Invalid Order webhook identifier.');
+            }
+        }
 
         $processImmediately = (bool) Configuration::get('AGPAGSEGURO_WEBHOOK_PROCESS_IMMEDIATE');
+        $shopId = (int) $this->context->shop->id;
+
+        $existing = AgPagSeguroWebhook::findByNotificationCode($notificationCode, $shopId);
+        if ($existing) {
+            $duplicate = new AgPagSeguroWebhook((int) $existing['id_agpagseguro_webhook']);
+            if (Validate::isLoadedObject($duplicate) && (int) $duplicate->status === 1) {
+                $duplicate->status = 0;
+                if (!$duplicate->save()) {
+                    $this->respond(500, 'Unable to requeue notification.');
+                }
+            }
+
+            $this->respond(200);
+        }
 
         $obj = new AgPagSeguroWebhook;
-        $obj->id_shop = $this->context->shop->id;
-        $obj->notification_code = $order->getId();
+        $obj->id_shop = $shopId;
+        $obj->notification_code = $notificationCode;
         $obj->status = 0;
 
-        $obj->add();
+        if (!$obj->add()) {
+            $this->respond(500, 'Unable to enqueue notification.');
+        }
 
         if ($processImmediately) {
             try {
                 $this->processWebhook($obj);
                 $obj->status = 2;
-                $obj->save();
-            } catch (Exception $e) {
+                if (!$obj->save()) {
+                    throw new \RuntimeException('Unable to mark notification as processed.');
+                }
+            } catch (\Throwable $e) {
                 $obj->status = 0;
                 $obj->save();
                 AgClienteLogger::addLog(
@@ -88,7 +131,7 @@ class AgPagSeguroWebhookModuleFrontController extends ModuleFrontController
             }
         }
 
-        exit();
+        $this->respond(200);
     }
 
     protected function processNext()
@@ -97,32 +140,112 @@ class AgPagSeguroWebhookModuleFrontController extends ModuleFrontController
         //     return;
         // }
 
-        while(1) {
+        $excludedIds = [];
+        while (true) {
+            $obj = null;
+            $webhookId = 0;
             try {
                 Configuration::updateValue('AGPAGSEGURO_WATCHDOG', time());
 
-                $next = AgPagSeguroWebhook::findNext();
+                $next = AgPagSeguroWebhook::findNext($excludedIds);
                 if (!$next) {
                     break;
                 }
 
-                $obj = new AgPagSeguroWebhook($next['id_agpagseguro_webhook']);
+                $webhookId = (int) $next['id_agpagseguro_webhook'];
+                if ($webhookId <= 0) {
+                    break;
+                }
+
+                $obj = new AgPagSeguroWebhook($webhookId);
                 AgClienteLogger::addLog("agpagseguro - Processando webhook #{$obj->id}", 1, null, null, null, true);
 
                 if (Validate::isLoadedObject($obj)) {
                     $this->processWebhook($obj);
                     $obj->status = 2;
+                    if (!$obj->save()) {
+                        throw new \RuntimeException('Unable to mark notification as processed.');
+                    }
+                } else {
+                    AgClienteLogger::addLog("agpagseguro - Webhook #{$webhookId} não pôde ser carregado.", 3, null, null, null, true);
+                    $excludedIds[] = $webhookId;
+                }
+
+                sleep(2);
+            } catch (\Throwable $e) {
+                if ($obj && Validate::isLoadedObject($obj)) {
+                    $obj->status = 0;
                     $obj->save();
                 }
-            } catch (Exception $e) {
+
                 AgClienteLogger::addLog("agpagseguro - Erro processando webhook: " . $e->getMessage(), 3, null, null, null, true);
+
+                if ($webhookId <= 0) {
+                    break;
+                }
+
+                $excludedIds[] = $webhookId;
+                sleep(2);
             }
-            
-            sleep(2);
         }
     }
 
     private function processWebhook($obj)
+    {
+        if (ClassicNotificationPayloadParser::isClassicNotificationCode($obj->notification_code)) {
+            $this->processClassicNotification($obj);
+            return;
+        }
+
+        if (!ClassicNotificationPayloadParser::isOrderId($obj->notification_code)) {
+            Logger::addLog("agpagseguro - notification_code inválido: {$obj->notification_code}", 2, null, 'AgPagSeguroWebhook', $obj->id, true);
+            return;
+        }
+
+        $this->processOrderWebhook($obj);
+    }
+
+    private function processClassicNotification($obj)
+    {
+        /** @var GetTransactionByNotificationCode $remote */
+        $remote = $this->get(GetTransactionByNotificationCode::class);
+        $details = $remote->exec($obj->notification_code);
+
+        $transaction = \AgPagseguroTransaction::getByTransaction($details['transactionCode']);
+        if (!Validate::isLoadedObject($transaction)) {
+            Logger::addLog(
+                "agpagseguro - Notificação clássica {$obj->notification_code} refere-se à transação {$details['transactionCode']}, sem transação local correspondente.",
+                2,
+                null,
+                'AgPagSeguroWebhook',
+                $obj->id,
+                true
+            );
+            return;
+        }
+
+        $mappedStatus = ClassicTransactionStatusMapper::toModuleStatus($details['status']);
+        $transaction->transaction_status = $mappedStatus ?? $details['status'];
+        if (!$transaction->update()) {
+            throw new \RuntimeException('Unable to persist PagBank classic transaction status.');
+        }
+
+        if ($mappedStatus === null) {
+            Logger::addLog(
+                "agpagseguro - Status clássico {$details['status']} sem mapeamento; pedido {$transaction->id_order} mantido sem alteração.",
+                2,
+                null,
+                'AgPagSeguroWebhook',
+                $obj->id,
+                true
+            );
+            return;
+        }
+
+        $transaction->updatePsStatus();
+    }
+
+    private function processOrderWebhook($obj)
     {
         $em = $this->get('doctrine.orm.entity_manager');
         $class = $em->getRepository(AgpagseguroTransaction::class)->findOneBy(['pagseguroOrderId' => $obj->notification_code]);
@@ -130,13 +253,6 @@ class AgPagSeguroWebhookModuleFrontController extends ModuleFrontController
         if (!$class) {
             return;
         }
-
-        // Check if notification_code starts with "ORD"
-        if (strpos($obj->notification_code, 'ORD') !== 0) {
-            Logger::addLog("agpagseguro - notification_code inválido: {$obj->notification_code}", 2, null, 'AgPagSeguroWebhook', $obj->id, true);
-            return;
-        }
-
 
         /** @var GetOrder */
         $remote = new Order;
@@ -192,5 +308,14 @@ class AgPagSeguroWebhookModuleFrontController extends ModuleFrontController
 
             $psOrder->setCurrentState($status);
         });
+    }
+
+    private function respond($statusCode, $message = '')
+    {
+        http_response_code((int) $statusCode);
+        if ($message !== '') {
+            echo $message;
+        }
+        exit();
     }
 }

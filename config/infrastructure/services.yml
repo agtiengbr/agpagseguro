@@ -44,6 +44,13 @@ services:
     class: AGTI\PagSeguro\Infrastructure\Api\Remote\Order\GetOrderByCharge
     parent: AGTI\PagSeguro\Infrastructure\Api\Remote\BaseService    
 
+  AGTI\PagSeguro\Infrastructure\Api\Remote\Classic\GetTransactionByNotificationCode:
+    public: true
+    class: AGTI\PagSeguro\Infrastructure\Api\Remote\Classic\GetTransactionByNotificationCode
+    arguments:
+      - '@agti.pagseguro.infrastructure.symfony.curl_http_client'
+      - '@AGTI\PagSeguro\ValueObject\Configuration'
+
   AGTI\PagSeguro\Infrastructure\Api\Remote\Order\CreateOrder:
     public: true
     class: AGTI\PagSeguro\Infrastructure\Api\Remote\Order\CreateOrder
@@ -77,4 +84,3 @@ services:
       - '@agti.pagseguro.infrastructure.symfony.curl_http_client'
       - '@agti.pagseguro.infrastructure.serializer.serializer'
       - '@AGTI\PagSeguro\ValueObject\Configuration'
-           

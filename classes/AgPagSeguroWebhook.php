@@ -34,16 +34,31 @@ class AgPagSeguroWebhook extends AgObjectModel
     public $date_add;
     public $date_upd;
 
-    public static function findNext()
+    public static function findByNotificationCode($notificationCode, $shopId)
+    {
+        $sql = new DbQuery;
+        $sql->select('a.id_agpagseguro_webhook, a.status')
+            ->from('agpagseguro_webhook', 'a')
+            ->where('a.notification_code = "' . pSQL($notificationCode) . '"')
+            ->where('a.id_shop = ' . (int) $shopId)
+            ->orderBy('a.id_agpagseguro_webhook DESC');
+
+        return Db::getInstance()->getRow($sql);
+    }
+
+    public static function findNext($excludedIds = [])
     {
         $sql = new DbQuery;
         $sql->from('agpagseguro_webhook', 'a')
-            ->where('status = 0')
-            ->orderBy('date_upd ASC')
-            ->where("id_shop=" . (int) Context::getContext()->shop->id)
-            ->where('date_add > "' . date('Y-m-d H:i:s', strtotime('-14 days')) . '"')
-            // ->where('date_upd < "' . date('Y-m-d H:i:s', strtotime('-5 minutes')) . '"');
-            ;
+            ->where('a.status = 0')
+            ->orderBy('a.date_upd ASC, a.id_agpagseguro_webhook ASC')
+            ->where('a.id_shop = ' . (int) Context::getContext()->shop->id)
+            ->where('a.date_add > "' . date('Y-m-d H:i:s', strtotime('-14 days')) . '"');
+
+        $excludedIds = array_values(array_unique(array_filter(array_map('intval', (array) $excludedIds))));
+        if ($excludedIds) {
+            $sql->where('a.id_agpagseguro_webhook NOT IN (' . implode(',', $excludedIds) . ')');
+        }
 
         $return = Db::getInstance()->getRow($sql);
 
