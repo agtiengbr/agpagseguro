@@ -97,7 +97,7 @@ class BaseAgPagSeguro extends AgPaymentModule
 	{
 		$this->name     = 'agpagseguro';
         $this->tab      = 'payments_gateways';
-        $this->version  = '2.2.6';
+        $this->version  = '2.2.7';
         $this->author   = 'AGTI';
         // $this->controllers = array('payment', 'validation');
 
@@ -704,7 +704,8 @@ class BaseAgPagSeguro extends AgPaymentModule
                 $textDisplay = 'Pague via Boleto Bancário';
             }
 
-            $newOption->setCallToActionText($textDisplay)
+            $newOption->setModuleName($this->name)
+                ->setCallToActionText($textDisplay)
                 ->setForm($this->generateTicketForm());
 
             $options[] = $newOption;
@@ -719,7 +720,8 @@ class BaseAgPagSeguro extends AgPaymentModule
                 $textDisplay = 'Pague no PIX';
             }
 
-            $newOption->setCallToActionText($textDisplay)
+            $newOption->setModuleName($this->name)
+                ->setCallToActionText($textDisplay)
                 ->setForm($this->generatePixForm());
 
             $options[] = $newOption;
@@ -734,7 +736,8 @@ class BaseAgPagSeguro extends AgPaymentModule
                 $textDisplay = 'Pague via Cartão de Crédito';
             }
 
-            $newOption->setCallToActionText($textDisplay)
+            $newOption->setModuleName($this->name)
+                ->setCallToActionText($textDisplay)
                 ->setForm($this->generateCreditCardForm());
             
             $options[] = $newOption;
