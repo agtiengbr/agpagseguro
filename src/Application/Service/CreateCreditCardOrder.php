@@ -42,6 +42,7 @@ class CreateCreditCardOrder
 
     public function exec(\Cart $cart, $installments, $cardToken, $holderName, $holderTaxId, $notificationUrl)
     {
+        $holderTaxId = CardholderDocument::normalize($holderTaxId);
         $psCustomer = new \Customer($cart->id_customer);
 
         $psAddress = new \Address($cart->id_address_invoice);
@@ -127,11 +128,11 @@ class CreateCreditCardOrder
                                 (new Card)
                                     ->setEncrypted($cardToken)
                                     ->setStore(false)
-                            )
-                            ->setHolder(
-                                (new PaymentHolder)
-                                    ->setName($holderName)
-                                    ->setTaxId($holderTaxId)
+                                    ->setHolder(
+                                        (new PaymentHolder)
+                                            ->setName($holderName)
+                                            ->setTaxId($holderTaxId)
+                                    )
                             )
                     )
             ]);

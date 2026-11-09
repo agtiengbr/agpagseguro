@@ -6,6 +6,19 @@ class Card
 {
     private $encrypted;
     private $store;
+    private $holder;
+
+    public function getHolder()
+    {
+        return $this->holder;
+    }
+
+    public function setHolder(PaymentHolder $holder)
+    {
+        $this->holder = $holder;
+
+        return $this;
+    }
 
     /**
      * Get the value of store

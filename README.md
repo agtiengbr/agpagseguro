@@ -21,6 +21,10 @@ Página do produto na AGTI: https://www.agti.eng.br/35-318-modulo-pagseguro-tran
 2. Baixe o arquivo `.zip` da [versão mais recente](https://github.com/agtiengbr/agpagseguro/releases/latest) deste módulo.
 3. No painel administrativo do PrestaShop, acesse **Módulos → Gerenciador de módulos**, clique em **Enviar um módulo** e selecione o ZIP baixado. O envio do arquivo já instala o módulo.
 
+## Pagamento com cartão para pessoa física ou jurídica
+
+O documento do comprador vem dos campos mapeados no painel do módulo. Ao pagar com cartão, informe o CPF ou CNPJ do titular no campo do cartão. O módulo formata e valida esse documento e o envia separadamente do documento do comprador.
+
 ## Contribuições
 
 Contribuições são bem-vindas. Forks e pull requests podem ser submetidos desde que estejam em conformidade com os termos da licença **GNU General Public License v3.0 (GPLv3)**.

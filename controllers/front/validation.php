@@ -111,6 +111,10 @@ class AgPagSeguroValidationModuleFrontController extends ModuleFrontController
             } else {
                 $status = $r->getTransactionStatus();
             }
+        } catch (\InvalidArgumentException $e) {
+            $this->errors[] = 'Confira o CPF ou CNPJ do titular do cartão.';
+            $this->redirectWithNotifications($this->context->link->getPageLink('order'));
+            return;
         } catch (PaymentDeclinedException $e) {
             $status = "DECLINED";
             $r = $e->getTransaction();

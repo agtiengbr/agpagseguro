@@ -15,7 +15,8 @@ class  CreateOrder extends BaseService
     
     public function exec(Order $order)
     {
-        $this->send("POST", [], $this->getSerializer()->normalize($order));
+        $payload = $this->getSerializer()->normalize($order, null, ['skip_null_values' => true]);
+        $this->send("POST", [], $payload);
 
         $r = $this->getRequest();
 

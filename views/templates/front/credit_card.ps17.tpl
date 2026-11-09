@@ -19,7 +19,7 @@
             </div>
             
             <div class="col-xs-12 col-md-4 col-lg-5">
-                <input type="text" name="agpagseguro_document" id="agpagseguro_document" class="col-xs-12" tabindex="1" autocomplete="off" placeholder="CPF"/>
+                <input type="text" name="agpagseguro_document" id="agpagseguro_document" class="col-xs-12" tabindex="1" autocomplete="off" aria-label="CPF/CNPJ do titular" placeholder="CPF/CNPJ do titular" maxlength="18" inputmode="numeric"/>
             </div>
         </div>
 

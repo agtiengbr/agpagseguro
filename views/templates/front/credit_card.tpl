@@ -33,8 +33,8 @@
             </div>
             
             <div class="col-xs-12 col-md-4 col-lg-5">
-                <label class="col-xs-12">CPF</label>
-                <input type="text" name="agpagseguro_document" id="agpagseguro_document" class="col-xs-12" tabindex="1" autocomplete="off"/>
+                <label class="col-xs-12" for="agpagseguro_document">CPF/CNPJ do titular</label>
+                <input type="text" name="agpagseguro_document" id="agpagseguro_document" class="col-xs-12" tabindex="1" autocomplete="off" maxlength="18" inputmode="numeric"/>
             </div>
         </div>
 
